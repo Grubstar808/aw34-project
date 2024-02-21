@@ -8,6 +8,13 @@ router.get("/", function (req, res, next) {
   res.render("pictures", { pictures: pictures });
 });
 
+router.get("/:fileName", function (req, res, next) {
+  const fileName = req.params?.fileName;
+  const pictures = fs.readdirSync(path.join(__dirname, "../pictures/"));
+  const matchingPictures = pictures.filter((picture) => picture === fileName);
+  res.render("pictures", { pictures: matchingPictures });
+});
+
 router.post("/", function (req, res, next) {
   const file = req.files.file;
   try {
