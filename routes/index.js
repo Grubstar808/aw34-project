@@ -5,6 +5,7 @@ var path = require("path");
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3();
 
+/* GET home page. */
 router.get("/", async function (req, res, next) {
   var params = {
     Bucket: process.env.CYCLIC_BUCKET_NAME,
@@ -27,7 +28,11 @@ router.get("/", async function (req, res, next) {
       };
     })
   );
-  res.render("index", { pictures: pictures, title: "Express" });
+  res.render("index", {
+    pictures: pictures,
+    title: "Express",
+    isAuthenticated: req.oidc.isAuthenticated(),
+  });
 });
 
 module.exports = router;

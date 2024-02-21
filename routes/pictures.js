@@ -4,8 +4,9 @@ const fs = require("fs");
 var path = require("path");
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3();
+const { requiresAuth } = require("express-openid-connect");
 
-router.get("/", function (req, res, next) {
+router.get("/", requiresAuth(), function (req, res, next) {
   const pictures = fs.readdirSync(path.join(__dirname, "../pictures/"));
   res.render("pictures", { pictures: pictures });
 });
@@ -17,7 +18,7 @@ router.get("/:fileName", function (req, res, next) {
   res.render("pictures", { pictures: matchingPictures });
 });
 
-router.post("/", async function (req, res, next) {
+router.post("/", requiresAuth(), async function (req, res, next) {
   const file = req.files.file;
   try {
     await s3
