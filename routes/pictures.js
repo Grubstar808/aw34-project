@@ -34,29 +34,40 @@ router.get("/", requiresAuth(), async function (req, res, next) {
   });
 });
 
-router.get("/:fileName", function (req, res, next) {
-  const fileName = req.params?.fileName;
-  const pictures = fs.readdirSync(path.join(__dirname, "../pictures/"));
-  const matchingPictures = pictures.filter((picture) => picture === fileName);
-  res.render("pictures", { pictures: matchingPictures });
+router.get("/:fileName", requiresAuth(), async function (req, res, next) {
+  const fileName = req.params.fileName;
+
+  const key = req.oidc.user.email + "/" + fileName;
+
+  const params = {
+    Bucket: process.env.CYCLIC_BUCKET_NAME,
+    Key: key,
+  };
+
+  const my_file = await s3.getObject(params).promise();
+
+  const picture = {
+    src: Buffer.from(my_file.Body).toString("base64"),
+    name: fileName,
+  };
+
+  res.render("pictures", {
+    pictures: [picture],
+    isAuthenticated: req.oidc.isAuthenticated(),
+  });
 });
 
 router.post("/", requiresAuth(), async function (req, res, next) {
   const file = req.files.file;
-  try {
-    await s3
-      .putObject({
-        Body: file.data,
-        Bucket: process.env.CYCLIC_BUCKET_NAME,
-        Key: req.oidc.user.email + "/" + file.name,
-      })
-      .promise();
-    console.log("File saved successfully");
-    res.end();
-  } catch (err) {
-    console.error("Error saving file:", err);
-    res.status(500).send("Error saving file");
-  }
+  await s3
+    .putObject({
+      Body: file.data,
+      Bucket: process.env.CYCLIC_BUCKET_NAME,
+      Key: req.oidc.user.email + "/" + file.name,
+    })
+    .promise();
+  console.log("File saved successfully");
+  res.end();
 });
 
 module.exports = router;
