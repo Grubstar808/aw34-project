@@ -28,7 +28,10 @@ router.get("/", requiresAuth(), async function (req, res, next) {
       };
     })
   );
-  res.render("pictures", { pictures: pictures });
+  res.render("pictures", {
+    pictures: pictures,
+    isAuthenticated: req.oidc.isAuthenticated(),
+  });
 });
 
 router.get("/:fileName", function (req, res, next) {
